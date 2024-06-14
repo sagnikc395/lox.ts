@@ -85,6 +85,17 @@ export class Scanner {
           this.addToken(TokenType.SLASH);
         }
         break;
+      case " ":
+      case "\r":
+      case "\t":
+        //ignore whitespace
+        break;
+      case "\n":
+        this.line++;
+        break;
+      case '"':
+        this.string();
+        break;
       default:
         Lox.Error(this.line, "Unexpected character.");
         break;
@@ -117,5 +128,24 @@ export class Scanner {
       return "\0";
     }
     return this.source.charAt(this.current);
+  }
+
+  private string() {
+    while (this.peek() != '"' && !this.isAtEnd()) {
+      if (this.peek() == "\n") this.line++;
+      this.advance();
+    }
+
+    if (this.isAtEnd()) {
+      Lox.Error(this.line, "Unterminated string.");
+      return;
+    }
+
+    // The closing ".
+    this.advance();
+
+    // Trim the surrounding quotes.
+    const value = this.source.substring(this.start + 1, this.current - 1);
+    this.addToken(TokenType.STRING, value);
   }
 }
