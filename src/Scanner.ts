@@ -205,6 +205,11 @@ export class Scanner {
     while (this.isAlphaNumeric(this.peek())) {
       this.advance();
     }
+    const text = this.source.substring(this.start, this.current);
+    let tokentype = this.keywords.get(text);
+    if (tokentype === null) {
+      tokentype = TokenType.IDENTIFIER;
+    }
     this.addToken(TokenType.IDENTIFIER);
   }
 
