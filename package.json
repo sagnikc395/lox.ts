@@ -1,0 +1,11 @@
+{
+  "name": "lox.ts",
+  "module": "src/lox.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
