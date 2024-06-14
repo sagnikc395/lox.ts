@@ -36,9 +36,57 @@ class Parser {
     return false;
   }
   private check(tokentype: TokenType): boolean {
-    if(this.isAtEnd()) {
-        return false;
+    if (this.isAtEnd()) {
+      return false;
     }
-    return typeof this.peek() === tokentype;
+    return this.peek().type === tokentype;
   }
+
+  private advance(): Token {
+    if (!this.isAtEnd()) {
+      this.current++;
+    }
+    return this.previous();
+  }
+
+  private isAtEnd(): boolean {
+    return this.peek().type === TokenType.EOF;
+  }
+
+  private peek(): Token {
+    return this.tokens[this.current];
+  }
+
+  private previous(): Token {
+    return this.tokens[this.current - 1];
+  }
+
+  private comparision(): Expr {
+    let expr = this.term();
+    while (
+      this.match(
+        TokenType.GREATER,
+        TokenType.GREATER_EQUAL,
+        TokenType.EQUAL,
+        TokenType.LESS_EQUAL
+      )
+    ) {
+      const operator = this.previous();
+      const right = this.term();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+    return expr;
+  }
+
+  private term(): Expr {
+    let expr = this.factor();
+    while (this.match(TokenType.MINUS, TokenType.PLUS)) {
+      const operator = this.previous();
+      const right = this.factor();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+    return expr;
+  }
+
+  
 }
