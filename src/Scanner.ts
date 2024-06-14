@@ -97,7 +97,11 @@ export class Scanner {
         this.string();
         break;
       default:
-        Lox.Error(this.line, "Unexpected character.");
+        if (this.isDigit(c)) {
+          this.number();
+        } else {
+          Lox.Error(this.line, "Unexpected character.");
+        }
         break;
     }
   }
@@ -147,5 +151,33 @@ export class Scanner {
     // Trim the surrounding quotes.
     const value = this.source.substring(this.start + 1, this.current - 1);
     this.addToken(TokenType.STRING, value);
+  }
+
+  private isDigit(c: string): boolean {
+    return c >= "0" && c <= "9";
+  }
+
+  private number() {
+    while (this.isDigit(this.peek())) this.advance();
+
+    // Look for a fractional part.
+    if (this.peek() == "." && this.isDigit(this.peekNext())) {
+      // Consuming  the "."
+      this.advance();
+
+      while (this.isDigit(this.peek())) this.advance();
+    }
+
+    this.addToken(
+      TokenType.NUMBER,
+      parseFloat(this.source.substring(this.start, this.current))
+    );
+  }
+
+  private peekNext(): string {
+    if (this.current + 1 >= this.source.length) {
+      return "\0";
+    }
+    return this.source.charAt(this.current + 1);
   }
 }

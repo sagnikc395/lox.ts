@@ -3,7 +3,8 @@ import type { Token } from "./Token";
 
 export class Lox {
   static hadError: boolean = false;
-  public static main(args: string) {
+  public static main() {
+    const args = process.argv;
     if (args.length > 1) {
       console.log("Usage: lox.ts [script]");
       process.exit(64);
@@ -52,3 +53,6 @@ export class Lox {
     this.hadError = true;
   }
 }
+
+//start
+Lox.main();
