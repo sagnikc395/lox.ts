@@ -9,7 +9,12 @@ bun install
 To run:
 
 ```bash
-bun run lox 
+bun run dev
+```
+
+Generate a single CLI binary as:
+```bash
+bun run build
 ```
 
 ### Todo:
