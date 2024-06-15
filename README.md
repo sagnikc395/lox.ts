@@ -19,5 +19,6 @@ bun run build
 
 ### Todo:
 
-To continue from https://craftinginterpreters.com/parsing-expressions.html
-, section Parser Class 
+Continue from here 
+https://craftinginterpreters.com/evaluating-expressions.html ; 
+complete the Interpreter class
