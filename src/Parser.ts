@@ -33,7 +33,7 @@ export class Parser {
       const equals = this.previous();
       const value = this.assignment();
 
-      if (exp.type === "VariableExpr") {
+      if (expr.type === "VariableExpr") {
         const name = expr.name;
         return {
           type: "AssignExpr",
@@ -48,7 +48,7 @@ export class Parser {
           value,
         };
       }
-      Lox.Error(equals, "Invalid assignment target.");
+        this.error(equals, "Invalid assignment target.");
     }
     return expr;
   }
@@ -142,11 +142,11 @@ export class Parser {
 
   private varDeclaration(): Stmt {
     const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
-    let initializer = this.match(TokenType.EQUAL) ? this.expression() : null;
+    let intializer = this.match(TokenType.EQUAL) ? this.expression() : null;
 
     this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
 
-    return { type: "VarStmt", name, initializer };
+    return { type: "VarStmt", name, intializer };
   }
 
   private equality(): Expr {
@@ -450,7 +450,7 @@ export class Parser {
     return { type: "CallExpr", callee, paren, arguments: args };
   }
 
-  primary(): Expr {
+  private primary(): Expr {
     if (this.match(TokenType.FALSE))
       return { type: "LiteralExpr", value: false };
     if (this.match(TokenType.TRUE)) return { type: "LiteralExpr", value: true };
