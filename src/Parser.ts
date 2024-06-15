@@ -42,20 +42,39 @@ export class Parser {
     return expr;
   }
 
-  private (...types: Array<TokenType>): boolean {
-    for(const typE of types) {
-        if(this.check(typE)){
-            this.advance();
-            return true;
-        }
+  private(...types: Array<TokenType>): boolean {
+    for (const typE of types) {
+      if (this.check(typE)) {
+        this.advance();
+        return true;
+      }
     }
     return false;
   }
 
   private check(type: TokenType): boolean {
-    if(this.isAtEnd()) {
-        return false;
+    if (this.isAtEnd()) {
+      return false;
     }
     return this.peek().type == type;
+  }
+
+  private advance(): Token {
+    if (!this.isAtEnd()) {
+      this.current++;
+    }
+    return this.previous();
+  }
+
+  private isAtEnd(): boolean {
+    return this.peek().type === TokenType.EOF;
+  }
+
+  private peek(): Token {
+    return this.tokens[this.current];
+  }
+
+  private previous(): Token {
+    return this.tokens[this.current - 1];
   }
 }
