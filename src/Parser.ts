@@ -1,4 +1,4 @@
-import type { Expr } from "./AST";
+import type { Expr, Stmt } from "./AST";
 import { Lox } from "./lox";
 import type { Token } from "./Token";
 import { TokenType } from "./TokenType";
@@ -89,6 +89,30 @@ export class Parser {
     return expr;
   }
 
+  private statement(): Stmt {
+    return this.expressionStatement();
+  }
+
+  private expressionStatement(): Stmt {
+    const expr = this.expression();
+    this.consume(TokenType.SEMICOLON, "Expected ';' after expression.");
+    return {
+      type: "ExpressionStmt",
+      expression: expr,
+    };
+  }
+
+  private consume(type: TokenType, message: string): Token {
+    if (this.check(type)) {
+      return this.advance();
+    }
+    throw this.error(this.peek(), message);
+  }
+
+  private error(token: Token, message: string): Error {
+    Lox.tokenError(token, message);
+    return new Error();
+  }
   private comparision(): Expr {
     let expr = this.addition();
     while (

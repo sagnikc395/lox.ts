@@ -1,5 +1,6 @@
 import { Scanner } from "./Scanner";
-import type { Token } from "./Token";
+import { Token } from "./Token";
+import { TokenType } from "./TokenType";
 
 export class Lox {
   static hadError: boolean = false;
@@ -48,6 +49,18 @@ export class Lox {
   static Error(line: number, message: string) {
     Lox.report(line, "", message);
   }
+
+  static tokenError(token: Token, message: string) {
+    if (token.type === TokenType.EOF) {
+      Lox.report(token.line, " at end", message);
+    }
+    Lox.report(
+      token.line,
+      "",
+      `${token.line} at ' ${token.lexeme} ' ${message}`
+    );
+  }
+
   private static report(line: number, where: string, message: string) {
     console.error(`[line ${line}] Error ${where}: ${message}`);
     this.hadError = true;
