@@ -11,6 +11,17 @@ export class Parser {
     this.tokens = tokens;
   }
 
+  private parse(): Array<Stmt> {
+    const statements: Array<Stmt> = [];
+    while (!this.isAtEnd()) {
+      const result = this.declaration();
+      if (result) {
+        statements.push(result);
+      }
+    }
+    return statements;
+  }
+
   private expression(): Expr {
     return this.assignment();
   }
@@ -86,7 +97,7 @@ export class Parser {
       return null;
     }
   }
-  classDeclaration(): Stmt {
+  private classDeclaration(): Stmt {
     const name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
 
     let superclass: VariableExpr | null = null;
@@ -107,7 +118,7 @@ export class Parser {
 
     return { type: "ClassStmt", methods, name, superclass };
   }
-  functionDeclaration(kind: string): FunctionStmt {
+  private functionDeclaration(kind: string): FunctionStmt {
     const name = this.consume(TokenType.IDENTIFIER, `Expect ${kind} name.`);
     this.consume(TokenType.LEFT_PAREN, `Expect '(' after ${kind} name.`);
     const parameters: Token[] = [];
@@ -129,7 +140,7 @@ export class Parser {
     return { type: "FunctionStmt", name, params: parameters, body };
   }
 
-  varDeclaration(): Stmt {
+  private varDeclaration(): Stmt {
     const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
     let initializer = this.match(TokenType.EQUAL) ? this.expression() : null;
 
@@ -359,4 +370,36 @@ export class Parser {
   private previous(): Token {
     return this.tokens[this.current - 1];
   }
+
+  private addition(): Expr {
+    let expr = this.multiplication();
+    while (this.match(TokenType.MINUS, TokenType.PLUS)) {
+      const operator = this.previous();
+      const right = this.multiplication();
+      expr = {
+        type: "BinaryExpr",
+        left: expr,
+        operator,
+        right,
+      };
+    }
+    return expr;
+  }
+
+  private multiplication(): Expr {
+    let expr = this.unary();
+    while (this.match(TokenType.SLASH, TokenType.STAR)) {
+      const operator = this.previous();
+      const right = this.unary();
+      expr = {
+        type: "BinaryExpr",
+        left: expr,
+        operator,
+        right,
+      };
+    }
+    return expr;
+  }
+
+  
 }
