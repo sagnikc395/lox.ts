@@ -74,7 +74,46 @@ export class Parser {
     return expr;
   }
 
-  private(...types: Array<TokenType>): boolean {
+  private equality(): Expr {
+    let expr = this.comparision();
+    while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+      const operator = this.previous();
+      const right = this.comparision();
+      expr = {
+        type: "BinaryExpr",
+        left: expr,
+        operator,
+        right,
+      };
+    }
+    return expr;
+  }
+
+  private comparision(): Expr {
+    let expr = this.addition();
+    while (
+      this.match(
+        TokenType.GREATER,
+        TokenType.GREATER_EQUAL,
+        TokenType.LESS,
+        TokenType.LESS_EQUAL
+      )
+    ) {
+      const operator = this.previous();
+      const right = this.addition();
+
+      expr = {
+        type: "BinaryExpr",
+        left: expr,
+        operator,
+        right,
+      };
+    }
+
+    return expr;
+  }
+
+  private match(...types: Array<TokenType>): boolean {
     for (const typE of types) {
       if (this.check(typE)) {
         this.advance();
