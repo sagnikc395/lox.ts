@@ -1,4 +1,4 @@
-import type { Expr, Stmt } from "./AST";
+import type { Expr, Stmt, VariableExpr } from "./AST";
 import { Lox } from "./lox";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
@@ -74,6 +74,70 @@ export class Parser {
     return expr;
   }
 
+  private declaration(): Stmt | null {
+    try {
+      if (this.match(TokenType.CLASS)) return this.classDeclaration();
+      if (this.match(TokenType.FUN))
+        return this.functionDeclaration("function");
+      if (this.match(TokenType.VAR)) return this.varDeclaration();
+      return this.statement();
+    } catch (e) {
+      this.synchronize();
+      return null;
+    }
+  }
+  classDeclaration(): Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
+
+    let superclass: VariableExpr | null = null;
+
+    if (this.match(TokenType.LESS)) {
+      this.consume(TokenType.IDENTIFIER, "Expect superclass name.");
+      superclass = { type: "VariableExpr", name: this.previous() };
+    }
+
+    this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+    const methods = [];
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      methods.push(this.functionDeclaration("method"));
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+    return { type: "ClassStmt", methods, name, superclass };
+  }
+  functionDeclaration(kind: string): FunctionStmt {
+    const name = this.consume(TokenType.IDENTIFIER, `Expect ${kind} name.`);
+    this.consume(TokenType.LEFT_PAREN, `Expect '(' after ${kind} name.`);
+    const parameters: Token[] = [];
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (parameters.length >= 255) {
+          this.error(this.peek(), "cannot have more than 255 parameters");
+        }
+
+        parameters.push(
+          this.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+        );
+      } while (this.match(TokenType.COMMA));
+    }
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+    this.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
+    const body = this.block();
+    return { type: "FunctionStmt", name, params: parameters, body };
+  }
+
+  varDeclaration(): Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
+    let initializer = this.match(TokenType.EQUAL) ? this.expression() : null;
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+
+    return { type: "VarStmt", name, initializer };
+  }
+
   private equality(): Expr {
     let expr = this.comparision();
     while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
@@ -91,6 +155,92 @@ export class Parser {
 
   private statement(): Stmt {
     return this.expressionStatement();
+  }
+
+  private returnStatement(): Stmt {
+    const keyword = this.previous();
+    let value = null;
+    if (!this.check(TokenType.SEMICOLON)) {
+      value = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after return value");
+
+    return { type: "ReturnStmt", keyword, value };
+  }
+
+  private forStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+    let initializer = null;
+    if (this.match(TokenType.SEMICOLON)) {
+      initializer = null;
+    } else if (this.match(TokenType.VAR)) {
+      initializer = this.varDeclaration();
+    } else {
+      initializer = this.expressionStatement();
+    }
+
+    let condition: Expr | null = null;
+    if (!this.check(TokenType.SEMICOLON)) {
+      condition = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Exprect ';' after loop condition.");
+
+    let increment;
+
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      increment = this.expression();
+    }
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    let body = this.statement();
+
+    if (increment) {
+      body = {
+        type: "BlockStmt",
+        statements: [body, { type: "ExpressionStmt", expression: increment }],
+      };
+    }
+
+    if (!condition) condition = { type: "LiteralExpr", value: true };
+    body = { type: "WhileStmt", condition, body };
+
+    if (initializer) {
+      body = { type: "BlockStmt", statements: [initializer, body] };
+    }
+
+    return body;
+  }
+
+  private whileStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Exprect ')' after condition.");
+    const body = this.statement();
+
+    return { type: "WhileStmt", condition, body };
+  }
+
+  private ifStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after if.");
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+
+    const thenBranch = this.statement();
+    let elseBranch = null;
+    if (this.match(TokenType.ELSE)) {
+      elseBranch = this.statement();
+    }
+
+    return { type: "IfStmt", condition, thenBranch, elseBranch };
+  }
+
+  private printStatement(): Stmt {
+    const value = this.expression();
+    this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
+    return { type: "PrintStmt", expression: value };
   }
 
   private expressionStatement(): Stmt {
