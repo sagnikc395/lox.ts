@@ -401,5 +401,89 @@ export class Parser {
     return expr;
   }
 
-  
+  private unary(): Expr {
+    if (this.match(TokenType.BANG, TokenType.MINUS)) {
+      const operator = this.previous();
+      const right = this.unary();
+      return {
+        type: "UnaryExpr",
+        operator,
+        right,
+      };
+    }
+    return this.call();
+  }
+
+  private call(): Expr {
+    let expr = this.primary();
+    while (true) {
+      if (this.match(TokenType.LEFT_PAREN)) {
+        expr = this.finishCall(expr);
+      } else if (this.match(TokenType.DOT)) {
+        const name = this.consume(
+          TokenType.IDENTIFIER,
+          "Expect property name after '.'."
+        );
+        expr = { type: "GetExpr", object: expr, name };
+      } else {
+        break;
+      }
+    }
+    return expr;
+  }
+
+  private finishCall(callee: Expr): Expr {
+    const args: Expr[] = [];
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (args.length >= 255) {
+          this.error(this.peek(), "Cannot have more than 255 arguments.");
+        }
+        args.push(this.expression());
+      } while (this.match(TokenType.COMMA));
+    }
+
+    const paren = this.consume(
+      TokenType.RIGHT_PAREN,
+      "Expect ')' after arguments."
+    );
+    return { type: "CallExpr", callee, paren, arguments: args };
+  }
+
+  primary(): Expr {
+    if (this.match(TokenType.FALSE))
+      return { type: "LiteralExpr", value: false };
+    if (this.match(TokenType.TRUE)) return { type: "LiteralExpr", value: true };
+
+    if (this.match(TokenType.NIL)) return { type: "LiteralExpr", value: null };
+
+    if (this.match(TokenType.NUMBER, TokenType.STRING)) {
+      return { type: "LiteralExpr", value: this.previous().literal };
+    }
+
+    if (this.match(TokenType.SUPER)) {
+      const keyword = this.previous();
+      this.consume(TokenType.DOT, "Expect '.' after 'super'.");
+      const method = this.consume(
+        TokenType.IDENTIFIER,
+        "Expect superclass method name."
+      );
+      return { type: "SuperExpr", keyword, method };
+    }
+
+    if (this.match(TokenType.THIS))
+      return { type: "ThisExpr", keyword: this.previous() };
+
+    if (this.match(TokenType.IDENTIFIER)) {
+      return { type: "VariableExpr", name: this.previous() };
+    }
+
+    if (this.match(TokenType.LEFT_PAREN)) {
+      const expr = this.expression();
+      this.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+      return { type: "GroupingExpr", expression: expr };
+    }
+
+    throw this.error(this.peek(), "Expected expression");
+  }
 }
