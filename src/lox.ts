@@ -1,3 +1,4 @@
+import { Parser } from "./Parser";
 import { Scanner } from "./Scanner";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
@@ -39,6 +40,9 @@ export class Lox {
   private static run(source: string) {
     const scanner = new Scanner(source);
     const tokens: Array<Token> = scanner.scanTokens();
+    const parser = new Parser(tokens);
+
+    const statements = parser.parse();
 
     //print the tokens
     for (const token of tokens) {

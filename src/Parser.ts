@@ -11,7 +11,7 @@ export class Parser {
     this.tokens = tokens;
   }
 
-  private parse(): Array<Stmt> {
+  parse(): Array<Stmt> {
     const statements: Array<Stmt> = [];
     while (!this.isAtEnd()) {
       const result = this.declaration();
@@ -48,7 +48,7 @@ export class Parser {
           value,
         };
       }
-        this.error(equals, "Invalid assignment target.");
+      this.error(equals, "Invalid assignment target.");
     }
     return expr;
   }
