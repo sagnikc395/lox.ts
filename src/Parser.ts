@@ -1,4 +1,4 @@
-import type { Expr, Stmt, VariableExpr } from "./AST";
+import type { Expr, FunctionStmt, Stmt, VariableExpr } from "./AST";
 import { Lox } from "./lox";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
@@ -250,6 +250,20 @@ export class Parser {
       type: "ExpressionStmt",
       expression: expr,
     };
+  }
+
+  private block(): Array<Stmt> {
+    const statements: Stmt[] = [];
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      const declaration = this.declaration();
+      if (declaration) {
+        statements.push(declaration);
+      }
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+    return statements;
   }
 
   private consume(type: TokenType, message: string): Token {
