@@ -1,9 +1,9 @@
+import type { Expr } from "./AST";
+import { Lox } from "./lox";
 import type { Token } from "./Token";
 import { TokenType } from "./TokenType";
 
-type Expr = {};
-
-class Parser {
+export class Parser {
   private tokens: Array<Token>;
   private current: number = 0;
 
@@ -12,81 +12,50 @@ class Parser {
   }
 
   private expression(): Expr {
-    return this.equality();
+    return this.assignment();
   }
 
-  private equality(): Expr {
-    let expr = this.comparison();
+  private assignment(): Expr {
+    const expr = this.or();
 
-    while (this.match(TokenType.BANG_EQUAL, TokenType.BANG_EQUAL)) {
-      const operator = this.previous();
-      const right = this.comparison();
-      expr = new Expr.Binary(expr, operator, right);
+    if (this.match(TokenType.EQUAL)) {
+      const equals = this.previous();
+      const value = this.assignment();
+
+      if (exp.type === "VariableExpr") {
+        const name = expr.name;
+        return {
+          type: "AssignExpr",
+          name,
+          value,
+        };
+      } else if (expr.type === "GetExpr") {
+        return {
+          type: "SetExpr",
+          object: expr.object,
+          name: expr.name,
+          value,
+        };
+      }
+      Lox.Error(equals, "Invalid assignment target.");
     }
     return expr;
   }
 
-  private match(...types: TokenType[]): boolean {
-    for (const tokentype of types) {
-      if (this.check(tokentype)) {
-        this.advance();
-        return true;
-      }
+  private (...types: Array<TokenType>): boolean {
+    for(const typE of types) {
+        if(this.check(typE)){
+            this.advance();
+            return true;
+        }
     }
     return false;
   }
-  private check(tokentype: TokenType): boolean {
-    if (this.isAtEnd()) {
-      return false;
+
+  private check(type: TokenType): boolean {
+    if(this.isAtEnd()) {
+        return false;
     }
-    return this.peek().type === tokentype;
+    return this.peek().type == type;
   }
-
-  private advance(): Token {
-    if (!this.isAtEnd()) {
-      this.current++;
-    }
-    return this.previous();
-  }
-
-  private isAtEnd(): boolean {
-    return this.peek().type === TokenType.EOF;
-  }
-
-  private peek(): Token {
-    return this.tokens[this.current];
-  }
-
-  private previous(): Token {
-    return this.tokens[this.current - 1];
-  }
-
-  private comparision(): Expr {
-    let expr = this.term();
-    while (
-      this.match(
-        TokenType.GREATER,
-        TokenType.GREATER_EQUAL,
-        TokenType.EQUAL,
-        TokenType.LESS_EQUAL
-      )
-    ) {
-      const operator = this.previous();
-      const right = this.term();
-      expr = new Expr.Binary(expr, operator, right);
-    }
-    return expr;
-  }
-
-  private term(): Expr {
-    let expr = this.factor();
-    while (this.match(TokenType.MINUS, TokenType.PLUS)) {
-      const operator = this.previous();
-      const right = this.factor();
-      expr = new Expr.Binary(expr, operator, right);
-    }
-    return expr;
-  }
-
-  
 }
