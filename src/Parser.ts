@@ -42,6 +42,38 @@ export class Parser {
     return expr;
   }
 
+  private or(): Expr {
+    let expr = this.and();
+
+    while (this.match(TokenType.OR)) {
+      const operator = this.previous();
+      const right = this.and();
+      expr = {
+        type: "LogicalExpr",
+        left: expr,
+        operator,
+        right,
+      };
+    }
+    return expr;
+  }
+
+  private and(): Expr {
+    let expr = this.equality();
+
+    while (this.match(TokenType.AND)) {
+      const operator = this.previous();
+      const right = this.equality();
+      expr = {
+        type: "LogicalExpr",
+        left: expr,
+        operator,
+        right,
+      };
+    }
+    return expr;
+  }
+
   private(...types: Array<TokenType>): boolean {
     for (const typE of types) {
       if (this.check(typE)) {
