@@ -1,6 +1,6 @@
 import type { Expr, Stmt } from "./AST";
 import { Lox } from "./lox";
-import type { Token } from "./Token";
+import { Token } from "./Token";
 import { TokenType } from "./TokenType";
 
 export class Parser {
@@ -113,6 +113,29 @@ export class Parser {
     Lox.tokenError(token, message);
     return new Error();
   }
+
+  private synchronize() {
+    this.advance();
+
+    while (!this.isAtEnd()) {
+      if (this.previous().type === TokenType.SEMICOLON) {
+        return;
+      }
+      switch (this.peek().type) {
+        case TokenType.CLASS:
+        case TokenType.FUN:
+        case TokenType.VAR:
+        case TokenType.FOR:
+        case TokenType.IF:
+        case TokenType.WHILE:
+        case TokenType.PRINT:
+        case TokenType.RETURN:
+          return;
+      }
+      this.advance();
+    }
+  }
+
   private comparision(): Expr {
     let expr = this.addition();
     while (
