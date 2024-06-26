@@ -1,6 +1,13 @@
 # lox.ts
 
-To install dependencies:
+lox.ts is an implementation of the Lox programming 
+in Typescript.
+
+## Setup:
+
+- Ensure Bun is installed.
+  - Ref : [Bun Install](https://bun.sh/docs/installation)
+- To install dependencies:
 
 ```bash
 bun install
@@ -17,8 +24,3 @@ Generate a single CLI binary as:
 bun run build
 ```
 
-### Todo:
-
-Continue from here 
-https://craftinginterpreters.com/evaluating-expressions.html ; 
-complete the Interpreter class

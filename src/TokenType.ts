@@ -1,4 +1,4 @@
-export enum TokenType {
+enum TokenType {
   //single character tokens
   LEFT_PAREN,
   RIGHT_PAREN,
@@ -12,7 +12,7 @@ export enum TokenType {
   SLASH,
   STAR,
 
-  //one or 2 character tokens
+  //one or two character tokens
   BANG,
   BANG_EQUAL,
   EQUAL,
@@ -47,3 +47,5 @@ export enum TokenType {
 
   EOF,
 }
+
+export default TokenType;
