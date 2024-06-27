@@ -110,7 +110,11 @@ class Scanner {
         break;
 
       default:
-        Lox.error(this.line, "Unexpected character.");
+        if (this.isDigit(c)) {
+          this.number();
+        } else {
+          Lox.error(this.line, "Unexpected character.");
+        }
         break;
     }
   }
@@ -157,6 +161,40 @@ class Scanner {
 
     const value = this.source.substring(this.start + 1, this.current - 1);
     this.addToken(TokenType.STRING, value);
+  }
+
+  private isDigit(c: string): boolean {
+    return c >= "0" && c <= "9";
+  }
+
+  //once we know we are in a number, we branch to a seperate method to consume the rest of the literal, like we do with strings
+  private number() {
+    while (this.isDigit(this.peek())) {
+      this.advance();
+    }
+
+    //looking for a fractional part
+    if (this.peek() == "." && this.isDigit(this.peekNext())) {
+      //consuming the .
+      this.advance();
+
+      while (this.isDigit(this.peek())) {
+        this.advance();
+      }
+    }
+
+    this.addToken(
+      TokenType.NUMBER,
+      parseFloat(this.source.substring(this.start, this.current))
+    );
+  }
+
+  //look past the decimal point requires a second character of lookahead since we dont want to consume the .
+  private peekNext(): string {
+    if (this.current + 1 >= this.source.length) {
+      return "\0";
+    }
+    return this.source.charAt(this.current + 1);
   }
 }
 
