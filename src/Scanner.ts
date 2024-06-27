@@ -9,6 +9,25 @@ class Scanner {
   start: number = 0;
   current: number = 0;
 
+  static keywords: Map<string, TokenType> = new Map<string, TokenType>([
+    ["and", TokenType.AND],
+    ["class", TokenType.CLASS],
+    ["else", TokenType.ELSE],
+    ["false", TokenType.FALSE],
+    ["for", TokenType.FOR],
+    ["fun", TokenType.FUN],
+    ["if", TokenType.IF],
+    ["nil", TokenType.NIL],
+    ["or", TokenType.OR],
+    ["print", TokenType.PRINT],
+    ["return", TokenType.RETURN],
+    ["super", TokenType.SUPER],
+    ["this", TokenType.THIS],
+    ["true", TokenType.TRUE],
+    ["var", TokenType.VAR],
+    ["while", TokenType.WHILE],
+  ]);
+
   constructor(source: string) {
     this.source = source;
   }
@@ -205,6 +224,11 @@ class Scanner {
   private identifier() {
     while (this.isAlphaNumeric(this.peek())) {
       this.advance();
+    }
+    const text = this.source.substring(this.start, this.current);
+    let type = Scanner.keywords.get(text);
+    if (type === null) {
+      type = TokenType.IDENTIFIER;
     }
     this.addToken(TokenType.IDENTIFIER, null);
   }
