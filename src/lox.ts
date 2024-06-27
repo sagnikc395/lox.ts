@@ -1,3 +1,6 @@
+import Scanner from "./scanner";
+import type Token from "./token";
+
 class Lox {
   static hadError: boolean = false;
   static main(args: string[]) {
