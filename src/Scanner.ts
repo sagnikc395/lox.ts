@@ -13,10 +13,10 @@ class Scanner {
     this.source = source;
   }
 
-  scanToken(): Array<Token> {
+  scanTokens(): Array<Token> {
     while (!this.isAtEnd()) {
       this.start = this.current;
-      this.scanTokens();
+      this.scanToken();
     }
 
     this.tokens.push(new Token(TokenType.EOF, "", {}, this.line));
@@ -28,7 +28,8 @@ class Scanner {
     return this.current >= this.source.length;
   }
 
-  private scanTokens() {
+  private scanToken() {
+    //match a given token
     const c = this.advance();
     switch (c) {
       case "(":
@@ -112,6 +113,9 @@ class Scanner {
       default:
         if (this.isDigit(c)) {
           this.number();
+        } else if (this.isAlpha(c)) {
+          //any lexeme starting with a letter or underscore is an identifier
+          this.identifier();
         } else {
           Lox.error(this.line, "Unexpected character.");
         }
@@ -195,6 +199,23 @@ class Scanner {
       return "\0";
     }
     return this.source.charAt(this.current + 1);
+  }
+
+  //auxiallary method to add a identifier
+  private identifier() {
+    while (this.isAlphaNumeric(this.peek())) {
+      this.advance();
+    }
+    this.addToken(TokenType.IDENTIFIER, null);
+  }
+
+  //helpers
+  private isAlpha(c: string): boolean {
+    return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c == "_";
+  }
+
+  private isAlphaNumeric(c: string): boolean {
+    return this.isAlpha(c) || this.isDigit(c);
   }
 }
 
