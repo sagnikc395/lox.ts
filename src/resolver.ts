@@ -6,7 +6,6 @@ import type {
   Expression,
   ExpressionVisitor,
   Grouping,
-  Literal,
   Logical,
   Unary,
   Variable,
@@ -15,15 +14,16 @@ import type { Interpreter } from "./interpreter";
 import Lox from "./lox";
 import { Stack } from "./stack";
 import type {
-  Block,
   Expr,
-  If,
   Print,
   Return,
   Statement,
   StatementVisitor,
-  Var,
   While,
+  Function,
+  Block,
+  Var,
+  If,
 } from "./statement";
 import type Token from "./token";
 
@@ -32,39 +32,11 @@ export class Resolver
 {
   interpreter: Interpreter;
   scopes: Stack<Record<string, boolean>>;
-
-  currentFunc: FunctionType = FunctionType.NONE;
+  currentFunction: FunctionType = FunctionType.NONE;
 
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter;
     this.scopes = new Stack();
-  }
-  visitBinaryExpr(expr: Binary): void {
-    throw new Error("Method not implemented.");
-  }
-  visitUnaryExpr(expr: Unary): void {
-    throw new Error("Method not implemented.");
-  }
-  visitGroupingExpr(expr: Grouping): void {
-    throw new Error("Method not implemented.");
-  }
-  visitLiteralExpr(expr: Literal): void {
-    throw new Error("Method not implemented.");
-  }
-  visitLogicalExpr(expr: Logical): void {
-    throw new Error("Method not implemented.");
-  }
-  visitCallExpr(expr: Call): void {
-    throw new Error("Method not implemented.");
-  }
-  visitPrintStatement(stmt: Print): void {
-    throw new Error("Method not implemented.");
-  }
-  visitWhileStatement(stmt: While): void {
-    throw new Error("Method not implemented.");
-  }
-  visitReturnStatement(stmt: Return): void {
-    throw new Error("Method not implemented.");
   }
 
   visitBlockStatement(stmt: Block): void {
@@ -79,7 +51,6 @@ export class Resolver
     if (stmt.initializer !== null) {
       this.resolveSingleExpression(stmt.initializer);
     }
-
     this.define(stmt.name);
   }
 
@@ -90,7 +61,7 @@ export class Resolver
     ) {
       Lox.errorWithToken(
         expr.name,
-        "Can't read local variable in its own initializer."
+        "Can't read local variable in its own initializer"
       );
     }
     this.resolveLocal(expr, expr.name);
@@ -112,23 +83,67 @@ export class Resolver
   }
 
   visitIfStatement(stmt: If): void {
-    this.resolve;
+    this.resolveSingleExpression(stmt.condition);
+    this.resolveSingleStatement(stmt.thenBranch);
+    if (stmt.elseBranch !== null) this.resolveSingleStatement(stmt.elseBranch);
+  }
+
+  visitPrintStatement(stmt: Print): void {
+    this.resolveSingleExpression(stmt.expression);
+  }
+
+  visitReturnStatement(stmt: Return): void {
+    if (this.currentFunction === FunctionType.NONE) {
+      Lox.errorWithToken(stmt.keyword, `Can't return from top-level code.`);
+    }
+    if (stmt.value !== null) {
+      this.resolveSingleExpression(stmt.value);
+    }
+  }
+
+  visitWhileStatement(stmt: While): void {
+    this.resolveSingleExpression(stmt.condition);
+    this.resolveSingleStatement(stmt.body);
+  }
+
+  visitBinaryExpr(expr: Binary): void {
+    this.resolveSingleExpression(expr.left);
+    this.resolveSingleExpression(expr.right);
+  }
+
+  visitCallExpr(expr: Call): void {
+    this.resolveSingleExpression(expr.callee);
+    expr.arguments.forEach((arg) => this.resolveSingleExpression(arg));
+  }
+
+  visitGroupingExpr(expr: Grouping): void {
+    this.resolveSingleExpression(expr.expression);
+  }
+
+  visitLiteralExpr(): void {}
+
+  visitLogicalExpr(expr: Logical): void {
+    this.resolveSingleExpression(expr.left);
+    this.resolveSingleExpression(expr.right);
+  }
+
+  visitUnaryExpr(expr: Unary): void {
+    this.resolveSingleExpression(expr.right);
   }
 
   resolveFunction(func: Function, type: FunctionType) {
-    const prevFunc = this.currentFunc;
-
-    this.currentFunc = type;
+    const prevFunc = this.currentFunction;
+    this.currentFunction = type;
     this.beginScope();
-    func.params.forEach((p: Token) => {
+    func.params.forEach((p) => {
       this.declare(p);
       this.define(p);
     });
-
     this.resolve(func.body);
     this.endScope();
-    this.currentFunc = prevFunc;
+    this.currentFunction = prevFunc;
   }
+
   resolveLocal(expr: Expression, name: Token) {
     let finished = false;
     this.scopes.forEach((scope, i) => {
@@ -167,11 +182,9 @@ export class Resolver
   resolve(stmts: Statement[]) {
     stmts.forEach((s) => this.resolveSingleStatement(s));
   }
-
   resolveSingleStatement(stmt: Statement) {
     stmt.accept(this);
   }
-
   resolveSingleExpression(expr: Expression) {
     expr.accept(this);
   }
