@@ -1,28 +1,39 @@
+import { Expr } from "./expression";
 import Token from "./token";
 import TokenType from "./tokentype";
 
-class Parser {
+export class Parser {
   private tokens: Array<Token>;
-  private count: number = 0;
+  private current: number = 0;
 
-  constructor(tokens: Array<Token>) {
+  constructor(tokens: Token[]) {
     this.tokens = tokens;
+    this.current = 0;
   }
 
-  private expression(): Expr {
-    return this.equality();
+  private check(type: TokenType) {
+    if (this.isAtEnd()) return false;
+    return this.peek().type == type;
   }
 
-  private equality(): Expr {
-    const expr = this.comparison();
-
-    while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
-      const operator = this.previous();
-      const right = this.comparison();
-    }
+  private advance() {
+    if (!this.isAtEnd()) this.current++;
+    return this.previous();
   }
 
-  private match(...types: TokenType[]): boolean {
+  private isAtEnd() {
+    return this.peek().type === TokenType.EOF;
+  }
+
+  private peek() {
+    return this.tokens[this.current] as Token;
+  }
+
+  private previous() {
+    return this.tokens[this.current - 1] as Token;
+  }
+
+  private match(...types: TokenType[]) {
     for (const type of types) {
       if (this.check(type)) {
         this.advance();
@@ -31,61 +42,4 @@ class Parser {
     }
     return false;
   }
-
-  private check(type: TokenType): boolean {
-    if (this.isAtEnd()) {
-      return false;
-    }
-    return this.peek().type === type;
-  }
-
-  private advance(): Token {
-    if (!this.isAtEnd()) {
-      this.current++;
-    }
-    return this.previous();
-  }
-
-  private isAtEnd(): boolean {
-    return this.peek().type == TokenType.EOF;
-  }
-
-  private peek(): Token {
-    return this.tokens[current];
-  }
-
-  private previous(): Token {
-    return this.tokens[current - 1];
-  }
-
-  private comparision(): Expr {
-    let expr = this.term();
-    while (
-      this.match(
-        TokenType.GREATER,
-        TokenType.GREATER_EQUAL,
-        TokenType.LESS,
-        TokenType.LESS_EQUAL
-      )
-    ) {
-      const operator = this.previous();
-      const right = this.term();
-      expr = new Expr.Binary(expr, operator, right);
-    }
-    return expr;
-  }
-
-  private term(): Expr {
-    let expr = factor();
-    while (this.match(TokenType.MINUS, TokenType.PLUS)) {
-      const operator = this.previous();
-      const right = factor();
-      expr = new Expr.Right(expr, operator, right);
-    }
-    return expr;
-  }
-
-  
 }
-
-export default Parser;

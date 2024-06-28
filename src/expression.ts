@@ -2,6 +2,7 @@ import type Token from "./token";
 import type { LiteralValue } from "./tokentype";
 
 export abstract class Expr {
+  static Right: any;
   abstract accept<T>(visitor: ExpressionVisitor<T>): T;
 }
 
