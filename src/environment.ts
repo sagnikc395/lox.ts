@@ -1,3 +1,4 @@
+import { RuntimeError } from "./runtime-error";
 import type Token from "./token";
 import type { LiteralValue } from "./tokentype";
 
