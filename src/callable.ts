@@ -2,6 +2,7 @@ import { Environment } from "./environment";
 import type { Interpreter } from "./interpreter";
 import type { LiteralValue } from "./tokentype";
 import { Function } from "./statement";
+import type { Return } from "./return-type";
 
 export enum FunctionType {
   //different types of functions that are posible
