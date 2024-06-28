@@ -25,9 +25,18 @@ func (c *Chunk) writeChunk(b uint8) {
 	if c.capacity < c.count+1 {
 		oldcapacity := c.capacity
 		c.code = append(c.code, uint8(c.capacity))
-		c.capacity = oldcapacity
+		c.capacity = growCapacity(oldcapacity)
 	}
 
 	c.code[c.count] = b
 	c.count++
 }
+
+func growCapacity(capacity int) int {
+	if capacity < 8 {
+		return 8
+	}
+	return capacity * 2
+}
+
+
