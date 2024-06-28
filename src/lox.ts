@@ -1,80 +1,44 @@
+import { Interpreter } from "./interpreter";
+import { Parser } from "./parser";
+import { Resolver } from "./resolver";
 import type { RuntimeError } from "./runtime-error";
 import Scanner from "./scanner";
 import type Token from "./token";
 import TokenType from "./tokentype";
 
-class Lox {
+export class Lox {
   static hadError: boolean = false;
   static hadRuntimeError = false;
+  static interpreter = new Interpreter();
 
-  static main(args: string[]) {
-    try {
-      if (args.length > 1) {
-        console.log(`Usage: lox.ts [script]`);
-        process.exit(64);
-      } else if (args.length === 1) {
-        Lox.runFile(args[0]);
-      } else {
-        Lox.runPrompt();
-      }
-    } catch (err) {
-      throw new Error("Unknown Error: main method exited!");
-    }
-  }
-  private static async runFile(path: string) {
-    try {
-      const file = Bun.file(path);
-      const buffer = await file.arrayBuffer();
-      const bytes = new Int8Array(buffer);
-      Lox.run(new String(bytes).toString());
+  public run(input: string) {
+    if (input) {
+      const scanner = new Scanner(input);
+      const tokens = scanner.scanTokens();
+      const parser = new Parser(tokens);
+      const stmts = parser.parse()!;
+      if (Lox.hadError) process.exit(65);
+      if (Lox.hadRuntimeError) process.exit(70);
 
-      // error in the exit code
-      if (this.hadError) {
-        process.exit(65);
-      }
-    } catch (err) {
-      throw new Error("Unknown Error: runFile method exited!");
+      const resolver = new Resolver(Lox.interpreter);
+      resolver.resolve(stmts);
+
+      if (Lox.hadError) process.exit(65);
+
+      Lox.interpreter.interpret(stmts);
     }
   }
 
-  private static async runPrompt() {
-    try {
-      while (true) {
-        const prompt = "> ";
-        process.stdout.write(prompt);
-        for await (const line of console) {
-          if (line === null) {
-            break;
-          }
-          //else run this command
-          Lox.run(line);
-          this.hadError = false;
-        }
-      }
-    } catch (err) {
-      throw new Error("Unknwon Error: runPrompt method exited!");
-    }
-  }
-
-  private static run(source: string) {
-    const scanner = new Scanner(source);
-    const tokens: Array<Token> = scanner.scanTokens();
-
-    for (const token of tokens) {
-      console.log(token);
-    }
-  }
   static runtimeError(error: RuntimeError) {
     console.log(error.message + `\n[line ${error.token.line}]`);
     Lox.hadRuntimeError = true;
   }
-
   static error(line: number, message: string) {
-    Lox.report(line, "", message);
+    this.report(line, "", message);
   }
 
   private static report(line: number, where: string, message: string) {
-    console.error(`[line ${line}] Error ${where} : ${message}`);
+    console.error(`[line ${line}] Error ${where}: ${message}`);
     this.hadError = true;
   }
 
@@ -82,9 +46,7 @@ class Lox {
     if (token.type === TokenType.EOF) {
       this.report(token.line, " at end", message);
     } else {
-      this.report(token.line, " at '" + token.lexeme + "'", message);
+      this.report(token.line, ` at '${token.lexeme}'`, message);
     }
   }
 }
-
-export default Lox;

@@ -1,9 +1,10 @@
+import type { LiteralValue } from "./tokentype";
 import type TokenType from "./tokentype";
 
 class Token {
   type: TokenType;
   lexeme: string;
-  literal: Object;
+  literal: LiteralValue;
   line: number;
 
   constructor(type: TokenType, lexeme: string, literal: Object, line: number) {
