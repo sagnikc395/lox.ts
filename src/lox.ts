@@ -6,7 +6,7 @@ import Scanner from "./scanner";
 import type Token from "./token";
 import TokenType from "./tokentype";
 
-export class Lox {
+export default class Lox {
   static hadError: boolean = false;
   static hadRuntimeError = false;
   static interpreter = new Interpreter();
