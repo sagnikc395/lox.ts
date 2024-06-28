@@ -1,9 +1,12 @@
+import type { RuntimeError } from "./runtime-error";
 import Scanner from "./scanner";
 import type Token from "./token";
 import TokenType from "./tokentype";
 
 class Lox {
   static hadError: boolean = false;
+  static hadRuntimeError = false;
+
   static main(args: string[]) {
     try {
       if (args.length > 1) {
@@ -60,6 +63,10 @@ class Lox {
     for (const token of tokens) {
       console.log(token);
     }
+  }
+  static runtimeError(error: RuntimeError) {
+    console.log(error.message + `\n[line ${error.token.line}]`);
+    Lox.hadRuntimeError = true;
   }
 
   static error(line: number, message: string) {
