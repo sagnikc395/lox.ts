@@ -13,7 +13,7 @@ import type {
   Variable,
 } from "./expression";
 import Lox from "./lox";
-import type { RuntimeError } from "./runtime-error";
+import { RuntimeError } from "./runtime-error";
 import type {
   Block,
   Expr,
@@ -26,6 +26,7 @@ import type {
   Var,
   While,
 } from "./statement";
+import type Token from "./token";
 import type { LiteralValue } from "./tokentype";
 
 export class Interpreter
@@ -71,6 +72,33 @@ export class Interpreter
     stmt.accept(this);
   }
 
+  private stringify(literal: LiteralValue) {
+    if (literal === null) return "nil";
+
+    if (typeof literal === "number") {
+      return Number(literal).toString();
+    }
+
+    return `${literal}`;
+  }
+
+  private checkNumberOperand(operator: Token, operand: LiteralValue) {
+    if (typeof operand === "number") return;
+    throw new RuntimeError(operator, `Operand must be numbers.`);
+  }
+
+  private checkNumberOperands(
+    operator: Token,
+    left: LiteralValue,
+    right: LiteralValue
+  ) {
+    if (typeof left === "number" && typeof right === "number") return;
+    throw new RuntimeError(operator, `Operands must be numbers.`);
+  }
+
+  private evaluate(expr: Expression) {
+    return expr.accept(this);
+  }
   visitBinaryExpr(expr: Binary): unknown {
     throw new Error("Method not implemented.");
   }
