@@ -47,5 +47,5 @@ enum TokenType {
 
   EOF,
 }
-
+export type LiteralValue = unknown;
 export default TokenType;
