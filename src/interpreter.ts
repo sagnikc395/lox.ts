@@ -12,6 +12,8 @@ import type {
   Unary,
   Variable,
 } from "./expression";
+import Lox from "./lox";
+import type { RuntimeError } from "./runtime-error";
 import type {
   Block,
   Expr,
@@ -19,6 +21,7 @@ import type {
   If,
   Print,
   Return,
+  Statement,
   StatementVisitor,
   Var,
   While,
@@ -48,6 +51,26 @@ export class Interpreter
     );
     this.env = this.global;
   }
+
+  resolve(id: string, expr: Expression, depth: number) {
+    this.locals[id] = { expr, depth };
+  }
+
+  interpret(statements: Statement[]) {
+    try {
+      for (const stmt of statements) {
+        this.execute(stmt);
+      }
+    } catch (error) {
+      const err = error as RuntimeError;
+      Lox.runtimeError(err);
+    }
+  }
+
+  private execute(stmt: Statement) {
+    stmt.accept(this);
+  }
+
   visitBinaryExpr(expr: Binary): unknown {
     throw new Error("Method not implemented.");
   }
