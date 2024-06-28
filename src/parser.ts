@@ -76,4 +76,35 @@ export class Parser {
   private expression(): Expr {
     return this.equality();
   }
+
+  private comparison(): Expr {
+    let expr = this.term();
+
+    while (
+      this.match(
+        TokenType.GREATER,
+        TokenType.GREATER_EQUAL,
+        TokenType.LESS,
+        TokenType.LESS_EQUAL
+      )
+    ) {
+      const operator = this.previous();
+      const right = this.term();
+      expr = new Binary(expr, right, operator);
+    }
+    return expr;
+  }
+
+  private term(): Expr {
+    let expr = this.factor();
+
+    while (this.match(TokenType.MINUS, TokenType.PLUS)) {
+      const operator = this.previous();
+      const right = this.factor();
+      expr = new Binary(expr, right, operator);
+    }
+    return expr;
+  }
+
+  
 }
