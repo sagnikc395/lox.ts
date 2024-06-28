@@ -1,4 +1,4 @@
-import type { Callable } from "./callable";
+import { CallableFunc, type Callable } from "./callable";
 import { Environment } from "./environment";
 import type {
   Assign,
@@ -14,20 +14,21 @@ import type {
 } from "./expression";
 import Lox from "./lox";
 import { RuntimeError } from "./runtime-error";
-import type {
-  Block,
-  Expr,
-  Function,
-  If,
-  Print,
+import {
   Return,
-  Statement,
-  StatementVisitor,
-  Var,
-  While,
+  type Block,
+  type Expr,
+  type Function,
+  type If,
+  type Print,
+  type Statement,
+  type StatementVisitor,
+  type Var,
+  type While,
 } from "./statement";
-import type Token from "./token";
+import Token from "./token";
 import type { LiteralValue } from "./tokentype";
+import TokenType from "./tokentype";
 
 export class Interpreter
   implements ExpressionVisitor<LiteralValue>, StatementVisitor<void>
@@ -103,48 +104,84 @@ export class Interpreter
     throw new Error("Method not implemented.");
   }
   visitUnaryExpr(expr: Unary): unknown {
-    throw new Error("Method not implemented.");
+    const right = this.evaluate(expr.right);
+    switch (expr.operator.type) {
+      case TokenType.BANG:
+        return !Boolean(right);
+      case TokenType.MINUS:
+        this.checkNumberOperand(expr.operator, right);
+        return -Number(right);
+    }
   }
   visitGroupingExpr(expr: Grouping): unknown {
-    throw new Error("Method not implemented.");
+    return this.evaluate(expr.expression);
   }
   visitLiteralExpr(expr: Literal): unknown {
-    throw new Error("Method not implemented.");
+    return expr.value;
   }
   visitVariableExpr(expr: Variable): unknown {
     throw new Error("Method not implemented.");
   }
   visitAssignExpr(expr: Assign): unknown {
-    throw new Error("Method not implemented.");
+    const value = this.evaluate(expr.value);
+    const record = this.locals[expr.name.toString()];
+
+    if (record !== undefined) {
+      this.env.assignAt(record.depth, expr.name, value);
+    } else {
+      this.global.assign(expr.name, value);
+    }
+    return value;
   }
   visitLogicalExpr(expr: Logical): unknown {
-    throw new Error("Method not implemented.");
+    const left = this.evaluate(expr.left);
+    if (expr.operator.type === TokenType.OR) {
+      if (Boolean(left)) return left;
+    } else {
+      if (!Boolean(left)) return left;
+    }
+    return this.evaluate(expr.right);
   }
   visitCallExpr(expr: Call): unknown {
     throw new Error("Method not implemented.");
   }
   visitExpressionStatement(stmt: Expr): void {
-    throw new Error("Method not implemented.");
+    this.evaluate(stmt.expression);
   }
   visitPrintStatement(stmt: Print): void {
-    throw new Error("Method not implemented.");
+    const value = this.evaluate(stmt.expression);
+    console.log(this.stringify(value));
   }
   visitVarStatement(stmt: Var): void {
-    throw new Error("Method not implemented.");
+    let value = null;
+    if (stmt.initializer !== null) {
+      value = this.evaluate(stmt.initializer);
+    }
+    this.env.define(stmt.name.lexeme, value);
   }
   visitBlockStatement(stmt: Block): void {
-    throw new Error("Method not implemented.");
+    this.executeBlock(stmt.statements, new Environment(this.env));
   }
   visitIfStatement(stmt: If): void {
-    throw new Error("Method not implemented.");
+    if (Boolean(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch !== null) {
+      this.execute(stmt.elseBranch);
+    }
   }
   visitWhileStatement(stmt: While): void {
-    throw new Error("Method not implemented.");
+    while (Boolean(this.evaluate(stmt.condition))) {
+      this.execute(stmt.body);
+    }
   }
   visitFunctionStatement(stmt: Function): void {
-    throw new Error("Method not implemented.");
+    const func = new CallableFunc(stmt, this.env);
+    this.env.define(stmt.name.lexeme, func);
+    return;
   }
   visitReturnStatement(stmt: Return): void {
-    throw new Error("Method not implemented.");
+    let value = null;
+    if (stmt.value !== null) value = this.evaluate(stmt.value);
+    throw new Return(value);
   }
 }
