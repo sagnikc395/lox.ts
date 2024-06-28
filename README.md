@@ -24,3 +24,8 @@ Generate a single CLI binary as:
 bun run build
 ```
 
+### Todo:
+
+- continue from here:
+  - https://craftinginterpreters.com/chunks-of-bytecode.html
+- 
