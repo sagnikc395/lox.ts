@@ -11,7 +11,16 @@ import {
 } from "./expression";
 import Lox from "./lox";
 import { ParserError } from "./parsererror";
-import type { Statement } from "./statement";
+import {
+  Block,
+  Expr,
+  If,
+  Print,
+  Return,
+  Var,
+  While,
+  type Statement,
+} from "./statement";
 import type Token from "./token";
 import TokenType from "./tokentype";
 
@@ -28,7 +37,7 @@ export class Parser {
     try {
       const statements: Statement[] = [];
       while (!this.isAtEnd()) {
-        statements.push(this.declaration()!);
+        statements.push(this.declaration() as Statement);
       }
       return statements;
     } catch (error) {
@@ -71,7 +80,7 @@ export class Parser {
 
     this.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
     const body = this.block();
-    return new Function(name, parameters, body);
+    return new Function(name.toString(), parameters.join(""), body.join(""));
   }
 
   private varDeclaration() {
@@ -168,7 +177,7 @@ export class Parser {
   private block() {
     const statements: Statement[] = [];
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
-      statements.push(this.declaration()!);
+      statements.push(this.declaration() as Statement);
     }
 
     this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
