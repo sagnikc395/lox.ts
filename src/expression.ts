@@ -1,8 +1,7 @@
 import type Token from "./token";
 import type { LiteralValue } from "./tokentype";
 
-export abstract class Expr {
-  static Right: any;
+export abstract class Expression {
   abstract accept<T>(visitor: ExpressionVisitor<T>): T;
 }
 
@@ -16,11 +15,12 @@ export interface ExpressionVisitor<T> {
   visitLogicalExpr(expr: Logical): T;
   visitCallExpr(expr: Call): T;
 }
-export class Assign extends Expr {
-  name: Token;
-  value: Expr;
 
-  constructor(name: Token, value: Expr) {
+export class Assign extends Expression {
+  name: Token;
+  value: Expression;
+
+  constructor(name: Token, value: Expression) {
     super();
     this.name = name;
     this.value = value;
@@ -31,7 +31,7 @@ export class Assign extends Expr {
   }
 }
 
-export class Variable extends Expr {
+export class Variable extends Expression {
   name: Token;
 
   constructor(name: Token) {
@@ -44,12 +44,12 @@ export class Variable extends Expr {
   }
 }
 
-export class Binary extends Expr {
-  left: Expr;
-  right: Expr;
+export class Binary extends Expression {
+  left: Expression;
+  right: Expression;
   operator: Token;
 
-  constructor(left: Expr, right: Expr, operator: Token) {
+  constructor(left: Expression, right: Expression, operator: Token) {
     super();
     this.left = left;
     this.right = right;
@@ -61,12 +61,12 @@ export class Binary extends Expr {
   }
 }
 
-export class Call extends Expr {
+export class Call extends Expression {
   paren: Token;
-  callee: Expr;
-  arguments: Array<Expr>;
+  callee: Expression;
+  arguments: Expression[];
 
-  constructor(paren: Token, callee: Expr, args: Expr[]) {
+  constructor(paren: Token, callee: Expression, args: Expression[]) {
     super();
     this.paren = paren;
     this.callee = callee;
@@ -78,11 +78,11 @@ export class Call extends Expr {
   }
 }
 
-export class Unary extends Expr {
-  right: Expr;
+export class Unary extends Expression {
+  right: Expression;
   operator: Token;
 
-  constructor(right: Expr, operator: Token) {
+  constructor(right: Expression, operator: Token) {
     super();
     this.right = right;
     this.operator = operator;
@@ -93,10 +93,10 @@ export class Unary extends Expr {
   }
 }
 
-export class Grouping extends Expr {
-  expression: Expr;
+export class Grouping extends Expression {
+  expression: Expression;
 
-  constructor(expression: Expr) {
+  constructor(expression: Expression) {
     super();
     this.expression = expression;
   }
@@ -106,7 +106,7 @@ export class Grouping extends Expr {
   }
 }
 
-export class Literal extends Expr {
+export class Literal extends Expression {
   value: LiteralValue;
 
   constructor(value: LiteralValue) {
@@ -119,12 +119,12 @@ export class Literal extends Expr {
   }
 }
 
-export class Logical extends Expr {
-  left: Expr;
-  right: Expr;
+export class Logical extends Expression {
+  left: Expression;
+  right: Expression;
   operator: Token;
 
-  constructor(left: Expr, right: Expr, operator: Token) {
+  constructor(left: Expression, right: Expression, operator: Token) {
     super();
     this.left = left;
     this.right = right;
